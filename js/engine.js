@@ -98,6 +98,10 @@
       dryer: false,
       freezer: false,
       openKitchen: false,
+      solar: "pv",
+      solarRegion: "centre",
+      solarOrient: "south",
+      solarTilt: "30",
       rooms: [],
     };
   }
@@ -186,6 +190,101 @@
     if (project.heating === "pac-air") return Math.max(1200, a * 10);
     if (project.heating === "pac-eau") return Math.max(1800, a * 14);
     return 0;
+  }
+
+  const SOLAR_YIELD = { nord: 980, centre: 1160, sud: 1380 };
+  const SOLAR_ORIENT = { south: 1, se: 0.95, sw: 0.95, east: 0.86, west: 0.86, north: 0.55 };
+  const SOLAR_TILT = { "15": 0.93, "30": 1, "45": 0.97, "60": 0.88 };
+  const PANEL_W = 425;
+  const PANEL_M2 = 2.15;
+
+  function annualConsumptionKwh(project) {
+    const area = Math.max(heatedArea(project), 20);
+    let kwh = area * 22;
+    if (project.heating === "electric") {
+      const perM2 = { re2020: 38, rt2012: 55, y2000: 90, old: 125 };
+      kwh += area * (perM2[project.era] || 70);
+    } else if (project.heating === "pac-air") kwh += area * 32;
+    else if (project.heating === "pac-eau") kwh += area * 42;
+    if (project.dhw === "electric") kwh += 1100;
+    else if (project.dhw === "thermo") kwh += 420;
+    if (project.ev === "3.7" || project.ev === "7.4") kwh += 2200;
+    if (project.pool) kwh += 1800;
+    if (project.ac) kwh += 450;
+    if (project.dryer) kwh += 350;
+    return Math.round(kwh);
+  }
+
+  function solarSizing(project) {
+    const cons = annualConsumptionKwh(project);
+    const yieldK = (SOLAR_YIELD[project.solarRegion] || 1160) *
+      (SOLAR_ORIENT[project.solarOrient] || 1) *
+      (SOLAR_TILT[project.solarTilt] || 1);
+    const want = project.solar && project.solar !== "none";
+    const withBat = project.solar === "pv-battery";
+    const roofCap = project.housing === "apartment" ? 3.4 : 9;
+    let kWc = cons / yieldK;
+    kWc = Math.min(kWc, roofCap);
+    if (project.housing === "apartment") kWc = Math.min(kWc, 3.4);
+    kWc = Math.max(1.7, kWc);
+    const nPanels = Math.max(4, Math.round((kWc * 1000) / PANEL_W));
+    kWc = Math.round((nPanels * PANEL_W) / 100) / 10;
+    const production = Math.round(kWc * yieldK);
+    const autoRate = withBat ? 0.72 : 0.38;
+    const selfUse = Math.round(production * autoRate);
+    const injected = Math.max(0, production - selfUse);
+    const coverage = Math.min(100, Math.round((selfUse / cons) * 100));
+    const roofM2 = Math.round(nPanels * PANEL_M2);
+    let batteryKwh = 0;
+    if (withBat) {
+      const raw = Math.max(5, Math.min(13.5, kWc * 1.25));
+      const stock = [5, 6.5, 8, 10, 13.5];
+      batteryKwh = stock.reduce((best, v) => (Math.abs(v - raw) < Math.abs(best - raw) ? v : best), stock[0]);
+    }
+    const acA = kWc * 1000 / 230;
+    let calibre = 16;
+    let section = 2.5;
+    if (acA > 16) {
+      calibre = 20;
+      section = 2.5;
+    }
+    if (acA > 20) {
+      calibre = 32;
+      section = 6;
+    }
+    if (acA > 32) {
+      calibre = 40;
+      section = 10;
+    }
+    const inverterKw = Math.round(kWc * 0.9 * 10) / 10;
+    const regionLabel = { nord: "Nord / façade atlantique", centre: "Centre / Île-de-France", sud: "Sud / Méditerranée" };
+    const orientLabel = { south: "Sud", se: "Sud-est", sw: "Sud-ouest", east: "Est", west: "Ouest", north: "Nord" };
+    return {
+      enabled: want,
+      withBat,
+      cons,
+      kWc,
+      nPanels,
+      panelW: PANEL_W,
+      production,
+      selfUse,
+      injected,
+      coverage,
+      autoRate,
+      roofM2,
+      batteryKwh,
+      yieldK: Math.round(yieldK),
+      inverterKw,
+      calibre,
+      section,
+      acA: Math.round(acA * 10) / 10,
+      regionLabel: regionLabel[project.solarRegion] || "Centre",
+      orientLabel: orientLabel[project.solarOrient] || "Sud",
+      tilt: project.solarTilt || "30",
+      note: project.housing === "apartment"
+        ? "En copropriété : toiture collective ou omrière, accord de l'AG. Le chiffre reste une cible de production."
+        : "Dimensionné pour l'autoconsommation, pas pour tout couvrir l'hiver. Surplus injecté au réseau.",
+    };
   }
 
   function pickSubscription(kva, table) {
@@ -431,6 +530,9 @@
     } else if (kind === "pac") {
       curve = "D";
       why = "Compresseur (PAC, clim, pompe) : gros courant d'appel. Une C partirait au démarrage ; la D laisse passer le pic (10 à 20 × In).";
+    } else if (kind === "pv") {
+      curve = "C";
+      why = "Départ AC de l'onduleur. Courbe C, calibre selon la puissance crête (environ kWc × 1000 / 230 V).";
     } else if (kind === "ev") {
       curve = "C";
       why = "Borne : courant plutôt stable. Courbe C, calibre selon la fiche constructeur.";
@@ -469,6 +571,9 @@
       ddr = "A";
       why =
         "IRVE : un DDR 30 mA qui ne protège que cette borne. Type A minimum (mode 1/2). Mode 3 mono : A ou F. Mode 3 tri : type B, ou A/F + DD-CDC.";
+    } else if (kind === "pv") {
+      ddr = "A";
+      why = "Onduleur PV côté AC : DDR 30 mA type A dédié (parfois B selon l'onduleur). Côté DC : NF C 15-712 — sectionneur, parafoudre.";
     } else if (kind === "out") {
       ddr = "A";
       why = "Extérieur (usages non fixés au bâtiment) : différentiel dédié, distinct des circuits intérieurs.";
@@ -584,6 +689,18 @@
       list.push({ name: "Éclairage extérieur", calibre: 16, section: 1.5, type: "A", kind: "out" });
     }
 
+    const solar = solarSizing(project);
+    if (solar.enabled) {
+      list.push({
+        name: solar.withBat ? "Onduleur PV + batterie" : "Onduleur photovoltaïque",
+        calibre: solar.calibre,
+        section: solar.section,
+        type: "A",
+        kind: "pv",
+        note: solar.kWc + " kWc · " + solar.nPanels + " modules",
+      });
+    }
+
     if (studio) {
       const spe = list.filter((c) => c.kind === "spe");
       if (spe.length > 3) {
@@ -637,6 +754,7 @@
     const circuits = generalCircuits(project).concat(specializedCircuits(project));
     const buckets = {
       ev: [],
+      pv: [],
       out: [],
       pac: [],
       a: [],
@@ -644,6 +762,7 @@
     };
     circuits.forEach((c) => {
       if (c.kind === "ev") buckets.ev.push(c);
+      else if (c.kind === "pv") buckets.pv.push(c);
       else if (c.kind === "out") buckets.out.push(c);
       else if (c.kind === "pac") buckets.pac.push(c);
       else if (c.type === "A") buckets.a.push(c);
@@ -664,6 +783,15 @@
         circuits: [c],
         dedicated: true,
         why: "Un différentiel rien que pour la borne. Type A minimum ; type F si tu veux plus d'immunité.",
+      })
+    );
+    buckets.pv.forEach((c) =>
+      ddrs.push({
+        type: "A",
+        label: "DDR PV 30 mA type A",
+        circuits: [c],
+        dedicated: true,
+        why: "Onduleur solaire : DDR dédié côté AC. Ne pas le mélanger avec la cuisine. Côté DC : NF C 15-712.",
       })
     );
     buckets.out.forEach((c) =>
@@ -775,6 +903,14 @@
         detail: "1 prise hors volume, pas de DCL en volumes 0/1, liaison équipotentielle.",
       });
     }
+    if (solarSizing(project).enabled) {
+      const s = solarSizing(project);
+      items.push({
+        ok: true,
+        label: "Photovoltaïque",
+        detail: s.kWc + " kWc, départ AC C" + s.calibre + " dédié, DDR type A 30 mA. Côté DC selon NF C 15-712.",
+      });
+    }
     return items;
   }
 
@@ -792,6 +928,8 @@
     totalArea,
     roomStatus,
     powerBalance,
+    solarSizing,
+    annualConsumptionKwh,
     specializedCircuits,
     generalCircuits,
     buildPanel,

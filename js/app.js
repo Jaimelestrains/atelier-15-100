@@ -19,7 +19,7 @@
   function load() {
     try {
       const raw = localStorage.getItem(KEY);
-      return raw ? JSON.parse(raw) : null;
+      return raw ? Object.assign(E.defaultProject(), JSON.parse(raw)) : null;
     } catch {
       return null;
     }
@@ -58,7 +58,8 @@
     { id: "circuits", title: "Circuits et câbles" },
     { id: "ddr", title: "Se protéger (DDR)" },
     { id: "tableau", title: "Le tableau électrique" },
-    { id: "compteur", title: "Le compteur, en kVA" },
+      { id: "compteur", title: "Le compteur, en kVA" },
+    { id: "solaire", title: "Solaire & batterie" },
     { id: "sdb", title: "Salle de bain" },
     { id: "lexique", title: "Lexique" },
   ];
@@ -122,6 +123,7 @@
             <tr><td>Chauffe-eau résistance</td><td>B 20 A</td><td>2,5 mm²</td><td>+ contacteur HC</td></tr>
             <tr><td>PAC / clim / pompe</td><td>D 16–32 A</td><td>selon puissance</td><td>Fort courant d'appel</td></tr>
             <tr><td>VMC</td><td>C 2 A</td><td>1,5 mm²</td><td>Dédié, ne coupe pas avec l'éclairage</td></tr>
+            <tr><td>Onduleur PV</td><td>C 16–32 A</td><td>2,5 / 6 mm²</td><td>DDR A dédié · NF C 15-712</td></tr>
             <tr><td>Borne 3,7 kW</td><td>C 20 A</td><td>2,5 mm²</td><td>Circuit IRVE dédié</td></tr>
             <tr><td>Borne 7,4 kW</td><td>C 40 A</td><td>10 mm²</td><td>DDR dédié</td></tr>
           </tbody>
@@ -191,8 +193,20 @@
         </table>
       </div>
     `,
-    sdb: `
+    solaire: `
       <div class="kicker">Chapitre 8</div>
+      <h2>Des panneaux, calés sur la maison</h2>
+      <p>On ne part pas d'une toiture vide. On part de <b>ce que le logement consomme dans l'année</b> (chauffage, ECS, voiture, usages), puis on cherche une puissance en kWc qui maximise l'autoconsommation — pas un champ qui revend tout l'été.</p>
+      <div class="grid-2">
+        <div class="card"><h3>kWc</h3><p>Kilowatt-crête : la puissance des modules au soleil pile. Un panneau actuel fait ~425 Wc. 10 modules ≈ 4,2 kWc.</p></div>
+        <div class="card"><h3>Productible</h3><p>Nord ~980 kWh/kWc/an, centre ~1160, sud ~1380. Orientation sud et 30° de pente : le max. Est/ouest : encore 86 %.</p></div>
+        <div class="card"><h3>Sans batterie</h3><p>On autoconsomme ~35–40 % : le midi (PAC, ballon, machines). Le soir, on reprend le réseau. Simple, moins cher.</p></div>
+        <div class="card"><h3>Avec batterie</h3><p>~1,2 kWh de stockage par kWc (souvent 5 à 10 kWh). Autoconsommation ~70 %. Utile si vous êtes là le soir, ou pour la borne.</p></div>
+      </div>
+      <div class="callout">Côté tableau (NF C 15-100 + NF C 15-712) : un départ AC dédié (courbe C), un DDR 30 mA type A rien que pour l'onduleur, parafoudre et sectionneur côté DC. Ça ne gonfle pas l'abonnement Enedis — le solaire produit, il ne tire pas au pic du soir (sauf charge batterie, qu'on met de nuit).</div>
+    `,
+    sdb: `
+      <div class="kicker">Chapitre 9</div>
       <h2>L'eau et l'électricité ne se croisent pas</h2>
       <p>Autour de la baignoire ou de la douche, l'espace est découpé en volumes. Plus on est près de l'eau, plus le matériel doit être étanche — ou interdit.</p>
       <div class="volumes">
@@ -213,7 +227,7 @@
       </div>
     `,
     lexique: `
-      <div class="kicker">Chapitre 9</div>
+      <div class="kicker">Chapitre 10</div>
       <h2>Les mots qu'on croise partout</h2>
       <div class="card"><h3>AGCP</h3><p>Appareil général de commande et de protection : le disjoncteur de branchement Enedis, celui qui coupe tout le logement.</p></div>
       <div class="card" style="margin-top:8px"><h3>Courbe B / C / D</h3><p>Le disjoncteur a une lettre : B (résistances), C (logement courant), D (compresseurs PAC / clim / pompe). Sans la bonne courbe, soit ça saute au démarrage, soit ça protège trop mollement.</p></div>
@@ -221,7 +235,8 @@
       <div class="card" style="margin-top:8px"><h3>DCL</h3><p>Dispositif de connexion pour luminaire : la « prise » du plafond, pour changer un lustre sans toucher aux fils.</p></div>
       <div class="card" style="margin-top:8px"><h3>GTL / ETEL</h3><p>Gaine technique et espace technique du logement : le placard du tableau + de la box.</p></div>
       <div class="card" style="margin-top:8px"><h3>IRVE</h3><p>Infrastructure de recharge pour véhicule électrique.</p></div>
-      <div class="card" style="margin-top:8px"><h3>Consuel</h3><p>Attestation de conformité avant mise sous tension du neuf / rénové.</p></div>
+      <div class="card" style="margin-top:8px"><h3>kWc</h3><p>Kilowatt-crête : puissance des panneaux au soleil nominal. Ce n'est pas l'abonnement Enedis.</p></div>
+      <div class="card" style="margin-top:8px"><h3>Consuel</h3><p>Attestation de conformité avant mise sous tension du neuf / rénové. Le photovoltaïque a aussi la NF C 15-712.</p></div>
     `,
   };
 
@@ -372,6 +387,36 @@
       ${row("evOffPeak", "Recharge de nuit", "Le compteur n'a pas besoin d'être taillé pour la borne + le four")}
       ${row("pool", "Pompe de piscine", "DDR type F")}
       ${row("ac", "Climatisation", "DDR type F")}
+      <div class="field" style="margin-top:18px"><label>Solaire</label>
+        <div class="choice-grid">
+          ${choice("solar", "none", "Pas maintenant", "On calcule quand même une cible")}
+          ${choice("solar", "pv", "Panneaux", "Autoconsommation, surplus au réseau")}
+          ${choice("solar", "pv-battery", "Panneaux + batterie", "Garder le midi pour le soir")}
+        </div>
+      </div>
+      <div class="field"><label>Région</label>
+        <div class="choice-grid">
+          ${choice("solarRegion", "nord", "Nord / Atlantique", "~980 kWh/kWc")}
+          ${choice("solarRegion", "centre", "Centre / Paris", "~1160 kWh/kWc")}
+          ${choice("solarRegion", "sud", "Sud / Méditerranée", "~1380 kWh/kWc")}
+        </div>
+      </div>
+      <div class="field"><label>Toiture</label>
+        <div class="choice-grid">
+          ${choice("solarOrient", "south", "Sud", "100 %")}
+          ${choice("solarOrient", "se", "Sud-est", "95 %")}
+          ${choice("solarOrient", "sw", "Sud-ouest", "95 %")}
+          ${choice("solarOrient", "east", "Est", "86 %")}
+          ${choice("solarOrient", "west", "Ouest", "86 %")}
+        </div>
+      </div>
+      <div class="field"><label>Pente</label>
+        <div class="choice-grid">
+          ${choice("solarTilt", "15", "15°", "Toit plat / bac acier")}
+          ${choice("solarTilt", "30", "30°", "Idéal France")}
+          ${choice("solarTilt", "45", "45°", "Toit un peu raide")}
+        </div>
+      </div>
     `;
   }
 
@@ -413,6 +458,15 @@
         </button>`;
       })
       .join("");
+    const solar = E.solarSizing(p);
+    const solarLine =
+      "<br>Solaire visé <strong>" +
+      solar.kWc +
+      " kWc</strong> · " +
+      solar.nPanels +
+      " modules" +
+      (solar.withBat ? " · batterie " + solar.batteryKwh + " kWh" : "") +
+      (solar.enabled ? "" : " (proposition)");
     return `
       <div class="panel meter-card">
         ${meterSvg(power)}
@@ -424,6 +478,7 @@
             · AGCP <strong>${power.agcp} A</strong>
             ${power.tight ? " · un peu juste" : ""}<br>
             ${power.peakLabel} · ${Math.round(power.area)} m² chauffés · ${power.sockets} prises
+            ${solarLine}
           </div>
         </div>
       </div>
@@ -440,6 +495,7 @@
     const power = E.powerBalance(p);
     const panel = E.buildPanel(p, power);
     const comp = E.compliance(p);
+    const solar = E.solarSizing(p);
     const why = power.groups
       .filter((g) => g.emploi > 40)
       .sort((a, b) => b.emploi - a.emploi)
@@ -508,6 +564,27 @@
         </div>
       </div>
       <div class="panel">
+        <h2>${solar.enabled ? (solar.withBat ? "Solaire + batterie" : "Solaire photovoltaïque") : "Proposition solaire"}</h2>
+        <p class="help">${solar.enabled ? "Calé sur la conso annuelle du logement, pas sur la toiture d'abord. Intégré au tableau (départ onduleur + DDR A)." : "Vous n'avez pas activé le solaire dans les équipements — voici quand même une cible, si vous le faites plus tard."}</p>
+        <div class="kva-big">${solar.kWc}<small>kWc · ${solar.nPanels} × ${solar.panelW} Wc</small></div>
+        <p class="muted">${solar.regionLabel} · ${solar.orientLabel} · ${solar.tilt}° · ${solar.yieldK} kWh/kWc · ${solar.roofM2} m² de toiture utile. ${solar.note}</p>
+        <div class="stat-row">
+          <div class="stat"><div class="v">${solar.cons.toLocaleString("fr-FR")}</div><div class="l">kWh/an estimés (maison)</div></div>
+          <div class="stat"><div class="v">${solar.production.toLocaleString("fr-FR")}</div><div class="l">kWh/an produits</div></div>
+          <div class="stat"><div class="v">${solar.coverage} %</div><div class="l">de la conso couverte (autoconsommée)</div></div>
+        </div>
+        <div class="stat-row">
+          <div class="stat"><div class="v">${solar.inverterKw} kW</div><div class="l">Onduleur · C${solar.calibre} · ${solar.section} mm²</div></div>
+          <div class="stat"><div class="v">${Math.round(solar.autoRate * 100)} %</div><div class="l">Taux d'autoconsommation ${solar.withBat ? "avec batterie" : "sans batterie"}</div></div>
+          <div class="stat"><div class="v">${solar.withBat ? solar.batteryKwh + " kWh" : solar.injected.toLocaleString("fr-FR")}</div><div class="l">${solar.withBat ? "Batterie utile visée" : "kWh/an injectés au réseau"}</div></div>
+        </div>
+        <ul class="why-list">
+          <li><b>${solar.selfUse.toLocaleString("fr-FR")} kWh</b> gardés dans la maison — le reste (${solar.injected.toLocaleString("fr-FR")} kWh) part au réseau.</li>
+          ${solar.withBat ? "<li>La batterie décale le midi vers le soir (plaque, éclairage, borne). Elle ne fait pas d'île de secours à elle seule.</li>" : "<li>Sans batterie : lancer lave-linge, ballon ou clim aux heures solaires augmente fortement le taux.</li>"}
+          <li>Le solaire <b>ne change pas</b> le kVA Enedis : il produit aux heures creuses de votre pic du soir.</li>
+        </ul>
+      </div>
+      <div class="panel">
         <h2>Contrôle NF C 15-100</h2>
         ${checks}
         <p class="disclaimer">Lecture pédagogique de la NF C 15-100 éd. 2024 et d'un bilan de puissance type UTE. Faites valider par un électricien qualifié avant travaux. Ne pas intervenir hors tension sans compétence.</p>
@@ -534,6 +611,7 @@
     dhw: { electric: "Ballon électrique", thermo: "Thermodynamique", gas: "Gaz / collectif" },
     cooking: { induction: "Induction", vitro: "Vitrocéramique", gas: "Gaz" },
     ev: { none: "Pas de borne", "3.7": "IRVE 3,7 kW", "7.4": "IRVE 7,4 kW" },
+    solar: { none: "Pas de solaire", pv: "Panneaux", "pv-battery": "Panneaux + batterie" },
   };
 
   function kitList(p) {
@@ -546,6 +624,8 @@
     if (p.shutters) items.push("volets roulants");
     if (p.pool) items.push("pompe piscine");
     if (p.ac) items.push("climatisation");
+    if (p.solar === "pv") items.push("photovoltaïque");
+    if (p.solar === "pv-battery") items.push("photovoltaïque + batterie");
     if (p.dhwOffPeak && p.dhw === "electric") items.push("ECS heures creuses");
     if (p.evOffPeak && p.ev !== "none") items.push("recharge de nuit");
     return items;
@@ -566,6 +646,7 @@
 
   function buildExtractText() {
     const { p, power, panel, comp, date } = extractPayload();
+    const solar = E.solarSizing(p);
     const kit = kitList(p);
     const rooms = p.rooms
       .map((r) => {
@@ -595,6 +676,7 @@
       `Eau chaude : ${LABELS.dhw[p.dhw]}`,
       `Cuisson : ${LABELS.cooking[p.cooking]}`,
       `Véhicule : ${LABELS.ev[p.ev]}`,
+      `Solaire : ${LABELS.solar[p.solar] || "—"} · ${solar.kWc} kWc · ${solar.nPanels} modules · ${solar.production} kWh/an${solar.withBat ? " · batterie " + solar.batteryKwh + " kWh" : ""}`,
       kit.length ? `Équipements : ${kit.join(", ")}` : "",
       ``,
       `Pièces`,
@@ -616,6 +698,7 @@
 
   function buildExtractHtml() {
     const { p, power, panel, comp, date } = extractPayload();
+    const solar = E.solarSizing(p);
     const kit = kitList(p);
     const rooms = p.rooms
       .map((r) => {
@@ -700,6 +783,9 @@
     </table>
     <h2>Pourquoi ce compteur</h2>
     <ul>${why}</ul>
+    <h2>Solaire</h2>
+    <p><b>${solar.kWc} kWc</b> · ${solar.nPanels} modules ${solar.panelW} Wc · ${solar.production.toLocaleString("fr-FR")} kWh/an produits · ${solar.coverage} % de la conso autoconsommée${solar.withBat ? " · batterie " + solar.batteryKwh + " kWh" : ""}.</p>
+    <p class="muted">${escapeHtml(solar.note)}</p>
     <h2>Tableau de répartition</h2>
     ${ddrs}
     <p class="muted">${panel.reserve} modules de réserve (20 %).</p>

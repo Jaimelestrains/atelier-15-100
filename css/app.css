@@ -691,7 +691,10 @@ th { font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; colo
 .mod-ddr { background: #c45c26; width: 56px; }
 .mod-a { background: #3d6b54; width: 56px; }
 .mod-f { background: #4a6fa5; width: 56px; }
-.mod-br { background: #d1a054; color: #1b1713; }
+.mod-br { background: #d1a054; color: #1b1713; min-width: 52px; }
+.mod-br.curve-B { background: #7a9a6e; color: #122; }
+.mod-br.curve-C { background: #d1a054; color: #1b1713; }
+.mod-br.curve-D { background: #6b8cce; color: #0d1524; }
 .mod-empty { background: #2b3230; color: #8aa; border: 1px dashed #445; }
 
 .circuit-table td:first-child { font-weight: 600; }

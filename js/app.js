@@ -113,17 +113,26 @@
         <table>
           <thead><tr><th>Usage</th><th>Disjoncteur</th><th>Cuivre</th><th>Remarque</th></tr></thead>
           <tbody>
-            <tr><td>Éclairage</td><td>16 A</td><td>1,5 mm²</td><td>2 circuits mini (sauf studio)</td></tr>
-            <tr><td>Prises générales</td><td>16 A / 20 A</td><td>1,5 / 2,5 mm²</td><td>5 ou 8 socles max</td></tr>
-            <tr><td>Prises cuisine</td><td>20 A</td><td>2,5 mm²</td><td>Circuit dédié, 6 socles</td></tr>
-            <tr><td>Four, LV, LL…</td><td>20 A</td><td>2,5 mm²</td><td>1 appareil = 1 circuit</td></tr>
-            <tr><td>Plaque</td><td>32 A</td><td>6 mm²</td><td>ou 20 A tri 2,5 mm²</td></tr>
-            <tr><td>Chauffe-eau</td><td>20 A</td><td>2,5 mm²</td><td>Souvent contacteur HC</td></tr>
-            <tr><td>VMC</td><td>2 A</td><td>1,5 mm²</td><td>Dédié, ne coupe pas avec l'éclairage</td></tr>
-            <tr><td>Borne 3,7 kW</td><td>20 A</td><td>2,5 mm²</td><td>Circuit IRVE dédié</td></tr>
-            <tr><td>Borne 7,4 kW</td><td>40 A</td><td>10 mm²</td><td>DDR dédié</td></tr>
+            <tr><td>Éclairage</td><td>C 16 A</td><td>1,5 mm²</td><td>2 circuits mini (sauf studio)</td></tr>
+            <tr><td>Prises générales</td><td>C 16 / C 20 A</td><td>1,5 / 2,5 mm²</td><td>5 ou 8 socles max</td></tr>
+            <tr><td>Prises cuisine</td><td>C 20 A</td><td>2,5 mm²</td><td>Circuit dédié, 6 socles</td></tr>
+            <tr><td>Four, LV, LL…</td><td>C 20 A</td><td>2,5 mm²</td><td>1 appareil = 1 circuit</td></tr>
+            <tr><td>Plaque</td><td>C 32 A</td><td>6 mm²</td><td>ou 20 A tri 2,5 mm²</td></tr>
+            <tr><td>Chauffage convecteurs</td><td>B 16 A</td><td>1,5 mm²</td><td>Charge résistive</td></tr>
+            <tr><td>Chauffe-eau résistance</td><td>B 20 A</td><td>2,5 mm²</td><td>+ contacteur HC</td></tr>
+            <tr><td>PAC / clim / pompe</td><td>D 16–32 A</td><td>selon puissance</td><td>Fort courant d'appel</td></tr>
+            <tr><td>VMC</td><td>C 2 A</td><td>1,5 mm²</td><td>Dédié, ne coupe pas avec l'éclairage</td></tr>
+            <tr><td>Borne 3,7 kW</td><td>C 20 A</td><td>2,5 mm²</td><td>Circuit IRVE dédié</td></tr>
+            <tr><td>Borne 7,4 kW</td><td>C 40 A</td><td>10 mm²</td><td>DDR dédié</td></tr>
           </tbody>
         </table>
+      </div>
+      <p>Le chiffre (16 A, 20 A…) est le calibre. La lettre devant est la <b>courbe</b> : à quel pic le disjoncteur accepte de ne pas claquer.</p>
+      <div class="grid-2">
+        <div class="card"><h3>Courbe B</h3><p>Déclenche entre 3 et 5 fois le calibre. Pour les <b>résistances pures</b> : convecteurs, ballon électrique. Plus sensible, donc plus protecteur quand il n'y a pas d'appel au démarrage.</p></div>
+        <div class="card"><h3>Courbe C</h3><p>5 à 10 fois. Le <b>couteau suisse du logement</b> : prises, éclairage LED, four, lave-linge, plaque, VMC, borne. Un petit moteur ne le fait pas sauter.</p></div>
+        <div class="card"><h3>Courbe D</h3><p>10 à 20 fois. Pour les <b>compresseurs</b> : PAC, clim, pompe de piscine. Au démarrage ils tirent un énorme pic ; une C partirait, une D laisse passer.</p></div>
+        <div class="card"><h3>1P+N · 4,5 kA</h3><p>En maison monophasée : un pôle + neutre. Pouvoir de coupure 4,5 kA suffit en général en bout de ligne Enedis ; 6 kA si vous êtes près du transformateur.</p></div>
       </div>
     `,
     ddr: `
@@ -192,7 +201,8 @@
       <div class="kicker">Chapitre 9</div>
       <h2>Les mots qu'on croise partout</h2>
       <div class="card"><h3>AGCP</h3><p>Appareil général de commande et de protection : le disjoncteur de branchement Enedis, celui qui coupe tout le logement.</p></div>
-      <div class="card" style="margin-top:8px"><h3>DDR</h3><p>Dispositif différentiel résiduel. Le 30 mA sauve des vies.</p></div>
+      <div class="card" style="margin-top:8px"><h3>Courbe B / C / D</h3><p>Le disjoncteur a une lettre : B (résistances), C (logement courant), D (compresseurs PAC / clim / pompe). Sans la bonne courbe, soit ça saute au démarrage, soit ça protège trop mollement.</p></div>
+      <div class="card" style="margin-top:8px"><h3>DDR</h3><p>Dispositif différentiel résiduel. Le 30 mA sauve des vies. Type AC, A ou F selon la charge.</p></div>
       <div class="card" style="margin-top:8px"><h3>DCL</h3><p>Dispositif de connexion pour luminaire : la « prise » du plafond, pour changer un lustre sans toucher aux fils.</p></div>
       <div class="card" style="margin-top:8px"><h3>GTL / ETEL</h3><p>Gaine technique et espace technique du logement : le placard du tableau + de la box.</p></div>
       <div class="card" style="margin-top:8px"><h3>IRVE</h3><p>Infrastructure de recharge pour véhicule électrique.</p></div>
@@ -428,7 +438,7 @@
       .map((d) => {
         const mods = [
           `<div class="mod ${d.type === "F" ? "mod-f" : d.type === "A" ? "mod-a" : "mod-ddr"}">${d.type} ${d.in}A</div>`,
-          ...d.circuits.map((c) => `<div class="mod mod-br">${c.calibre}A<br>${escapeHtml(c.name)}</div>`),
+          ...d.circuits.map((c) => `<div class="mod mod-br curve-${c.curve || "C"}">${c.breaker || c.calibre + "A"}<br>${escapeHtml(c.name)}</div>`),
         ].join("");
         return `<div><div class="small muted" style="margin:0 0 4px">${d.label} · ${d.circuits.length} départ${d.circuits.length > 1 ? "s" : ""}</div><div class="board-row">${mods}</div></div>`;
       })
@@ -439,7 +449,7 @@
     const table = panel.circuits
       .map(
         (c) =>
-          `<tr><td>${escapeHtml(c.name)}</td><td>${c.calibre} A</td><td>${c.section} mm²</td><td>DDR ${c.type}</td><td>${c.note || "—"}</td></tr>`
+          `<tr><td>${escapeHtml(c.name)}</td><td><b>${c.breaker}</b> ${c.poles}</td><td>${c.section} mm²</td><td>DDR ${c.type}</td><td>${escapeHtml(c.breakerWhy || c.note || "—")}</td></tr>`
       )
       .join("");
 
@@ -469,14 +479,15 @@
       </div>
       <div class="panel">
         <h2>Tableau de répartition</h2>
-        <p class="help">Lecture de gauche à droite : d'abord le différentiel (cuivre = A, vert = A « confort », bleu = F), puis les disjoncteurs. La réserve 20 % est obligatoire en maison.</p>
+        <p class="help">Chaque disjoncteur s'écrit <b>courbe + calibre</b> : C16, B20, D20. B = résistif, C = général, D = compresseur. À gauche le DDR (cuivre = A, vert = A, bleu = F).</p>
         <div class="board">${rows}<div><div class="small muted" style="margin:0 0 4px">Réserve 20 %</div><div class="board-row">${empty}</div></div></div>
+        <p class="small muted" style="margin-top:10px">Légende modules : <span style="color:#7a9a6e">vert = courbe B</span> · <span style="color:#b8860b">or = courbe C</span> · <span style="color:#6b8cce">bleu = courbe D</span></p>
       </div>
       <div class="panel">
         <h2>Nomenclature des circuits</h2>
         <div class="table-wrap">
           <table class="circuit-table">
-            <thead><tr><th>Circuit</th><th>Calibre</th><th>Section</th><th>Différentiel</th><th>Note</th></tr></thead>
+            <thead><tr><th>Circuit</th><th>Disjoncteur</th><th>Section</th><th>Différentiel</th><th>Pourquoi cette courbe</th></tr></thead>
             <tbody>${table}</tbody>
           </table>
         </div>
@@ -548,7 +559,7 @@
       })
       .join("\n");
     const circuits = panel.circuits
-      .map((c) => `· ${c.name} — ${c.calibre} A · ${c.section} mm² · DDR ${c.type}`)
+      .map((c) => `· ${c.name} — ${c.breaker} ${c.poles} · ${c.section} mm² · DDR ${c.type} · ${c.breakerWhy}`)
       .join("\n");
     const why = power.groups
       .filter((g) => g.emploi > 40)
@@ -605,7 +616,7 @@
     const circuits = panel.circuits
       .map(
         (c) =>
-          `<tr><td>${escapeHtml(c.name)}</td><td>${c.calibre} A</td><td>${c.section} mm²</td><td>DDR ${c.type}</td><td>${escapeHtml(c.note || "—")}</td></tr>`
+          `<tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.breaker)} ${c.poles}</td><td>${c.section} mm²</td><td>DDR ${c.type}</td><td>${escapeHtml(c.breakerWhy || c.note || "—")}</td></tr>`
       )
       .join("");
     const ddrs = panel.ddrs
@@ -679,7 +690,7 @@
     <p class="muted">${panel.reserve} modules de réserve (20 %).</p>
     <h2>Nomenclature</h2>
     <table>
-      <thead><tr><th>Circuit</th><th>Calibre</th><th>Section</th><th>Différentiel</th><th>Note</th></tr></thead>
+      <thead><tr><th>Circuit</th><th>Disjoncteur</th><th>Section</th><th>Différentiel</th><th>Courbe</th></tr></thead>
       <tbody>${circuits}</tbody>
     </table>
     <h2>Contrôle NF C 15-100</h2>

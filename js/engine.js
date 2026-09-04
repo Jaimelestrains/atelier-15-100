@@ -410,6 +410,55 @@
     };
   }
 
+  function breakerSpec(circuit, project) {
+    let curve = "C";
+    let why = "Usage général : prises et électroménager. Courbe C (5 à 10 × In).";
+    const kind = circuit.kind;
+    const name = circuit.name || "";
+
+    if (kind === "light" || kind === "out") {
+      curve = "C";
+      why = "LED : pic à l'allumage. Une courbe B claquerait trop souvent ; la C est le standard actuel.";
+    } else if (kind === "heat") {
+      curve = "B";
+      why = "Convecteurs = résistance pure. Courbe B (3 à 5 × In) : coupe plus vite, assez pour ce type de charge.";
+    } else if (kind === "dhw" && project.dhw === "electric") {
+      curve = "B";
+      why = "Ballon à résistance : charge résistive, courbe B. Ajouter un contacteur heures creuses.";
+    } else if (kind === "dhw") {
+      curve = "C";
+      why = "Ballon thermodynamique : petit compresseur, courbe C.";
+    } else if (kind === "pac") {
+      curve = "D";
+      why = "Compresseur (PAC, clim, pompe) : gros courant d'appel. Une C partirait au démarrage ; la D laisse passer le pic (10 à 20 × In).";
+    } else if (kind === "ev") {
+      curve = "C";
+      why = "Borne : courant plutôt stable. Courbe C, calibre selon la fiche constructeur.";
+    } else if (kind === "other" && name.indexOf("VMC") === 0) {
+      curve = "C";
+      why = "Petit moteur en continu. C 2 A dédié, pour ne pas l'éteindre avec l'éclairage.";
+    } else if (kind === "other" && name.indexOf("Volet") === 0) {
+      curve = "C";
+      why = "Moteurs de volets : appel modéré, courbe C.";
+    } else if (kind === "spe" && name.indexOf("Plaque") === 0) {
+      curve = "C";
+      why = "Induction : un appel au branchement, mais C 32 A reste le standard logement.";
+    } else if (kind === "spe") {
+      curve = "C";
+      why = "Gros électroménager (moteur + résistance). Courbe C.";
+    } else if (kind === "sock") {
+      curve = "C";
+      why = "Prises : on ne sait pas ce qu'on branche. Courbe C par défaut.";
+    }
+
+    circuit.curve = curve;
+    circuit.poles = "1P+N";
+    circuit.icu = "4,5 kA";
+    circuit.breaker = curve + circuit.calibre;
+    circuit.breakerWhy = why;
+    return circuit;
+  }
+
   function specializedCircuits(project) {
     const list = [];
     const studio = principalCount(project.rooms) <= 1;
@@ -481,7 +530,9 @@
         /* studio : 1×32 A + 2×16 A min si équipement non fourni — on garde l'équipement réel */
       }
     }
-    return list;
+    return list.map(function (c) {
+      return breakerSpec(c, project);
+    });
   }
 
   function generalCircuits(project) {
@@ -517,7 +568,9 @@
         note: "max. 8 socles / circuit en 2,5 mm² (éd. 2024)",
       });
     }
-    return list;
+    return list.map(function (c) {
+      return breakerSpec(c, project);
+    });
   }
 
   function buildPanel(project, power) {

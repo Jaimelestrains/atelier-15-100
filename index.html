@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f3eee4" />
+    <meta
+      name="description"
+      content="Atelier 15-100 : comprendre la norme NF C 15-100 et dimensionner son compteur en construisant son logement."
+    />
+    <title>Atelier 15-100</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=Syne:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/app.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <button class="brand" type="button" data-view="home">
+          <svg class="brand-mark" viewBox="0 0 36 36" aria-hidden="true">
+            <rect x="3" y="8" width="30" height="22" rx="3" fill="none" stroke="#1b1713" stroke-width="1.6" />
+            <path d="M3 16h30M15 8v22" stroke="#c45c26" stroke-width="1.4" />
+            <circle cx="10" cy="12" r="1.3" fill="#c45c26" />
+            <circle cx="21" cy="20" r="1.3" fill="#c45c26" />
+            <circle cx="27" cy="12" r="1.3" fill="#2c4a3c" />
+          </svg>
+          <span class="brand-name">Atelier 15-100<span>NF C · logement</span></span>
+        </button>
+        <nav class="nav">
+          <button type="button" data-view="home">Accueil</button>
+          <button type="button" data-view="guide">La norme</button>
+          <button type="button" data-view="atelier">Construire</button>
+        </nav>
+      </header>
+
+      <section class="view home" data-view="home">
+        <div class="home">
+          <div class="home-hero">
+            <div>
+              <div class="eyebrow">Édition 2024 · pédagogique</div>
+              <h1>La norme, pièce par pièce.</h1>
+              <p class="lede">
+                Vous dessinez votre logement. L’atelier vous dit ce que la NF C 15-100 exige dans chaque pièce,
+                compose le tableau, et propose la puissance du compteur — en kVA, sans jargon inutile.
+              </p>
+              <div class="cta-row">
+                <button class="btn btn-primary" type="button" data-view="atelier">Construire mon installation</button>
+                <button class="btn btn-ghost" type="button" data-view="guide">Comprendre la norme</button>
+              </div>
+            </div>
+            <div class="home-plan">
+              <svg viewBox="0 0 420 320" role="img" aria-label="Plan schématique d'un logement">
+                <rect x="16" y="20" width="250" height="160" fill="#fbf8f2" stroke="#1b1713" stroke-width="1.6" />
+                <text x="28" y="42" font-size="11" fill="#5c5348" font-family="Outfit">Séjour</text>
+                <rect x="266" y="20" width="138" height="96" fill="#fbf8f2" stroke="#1b1713" stroke-width="1.6" />
+                <text x="278" y="42" font-size="11" fill="#5c5348" font-family="Outfit">Cuisine</text>
+                <rect x="266" y="116" width="138" height="64" fill="#fbf8f2" stroke="#1b1713" stroke-width="1.6" />
+                <text x="278" y="138" font-size="11" fill="#5c5348" font-family="Outfit">SDB</text>
+                <rect x="16" y="180" width="120" height="120" fill="#fbf8f2" stroke="#1b1713" stroke-width="1.6" />
+                <text x="28" y="202" font-size="11" fill="#5c5348" font-family="Outfit">Chambre</text>
+                <rect x="136" y="180" width="130" height="120" fill="#fbf8f2" stroke="#1b1713" stroke-width="1.6" />
+                <text x="148" y="202" font-size="11" fill="#5c5348" font-family="Outfit">Chambre</text>
+                <rect x="266" y="180" width="138" height="120" fill="#fbf8f2" stroke="#1b1713" stroke-width="1.6" />
+                <text x="278" y="202" font-size="11" fill="#5c5348" font-family="Outfit">Entrée</text>
+                <circle cx="40" cy="70" r="4" fill="#c45c26" />
+                <circle cx="80" cy="70" r="4" fill="#c45c26" />
+                <circle cx="120" cy="70" r="4" fill="#c45c26" />
+                <circle cx="160" cy="70" r="4" fill="#c45c26" />
+                <circle cx="40" cy="150" r="4" fill="#c45c26" />
+                <circle cx="210" cy="40" r="4" fill="#e0b84a" />
+                <circle cx="330" cy="55" r="4" fill="#c45c26" />
+                <circle cx="360" cy="55" r="4" fill="#c45c26" />
+                <circle cx="330" cy="85" r="4" fill="#c45c26" />
+                <circle cx="300" cy="148" r="4" fill="#c45c26" />
+                <circle cx="50" cy="250" r="4" fill="#c45c26" />
+                <circle cx="90" cy="250" r="4" fill="#c45c26" />
+                <circle cx="50" cy="280" r="4" fill="#2c4a3c" />
+                <path d="M210 40 L330 55 L300 148" fill="none" stroke="#c45c26" stroke-width="1" opacity=".45" />
+                <rect x="300" y="250" width="70" height="28" rx="6" fill="#1b1713" />
+                <text x="335" y="268" text-anchor="middle" font-size="10" fill="#f3eee4" font-family="Outfit">6 kVA</text>
+              </svg>
+            </div>
+          </div>
+          <div class="home-notes">
+            <article class="note">
+              <b>1. On pose les pièces</b>
+              <p>Studio, T3 ou maison : chaque pièce reçoit le minimum de prises, d’éclairage et de RJ45 prévu par la norme.</p>
+            </article>
+            <article class="note">
+              <b>2. On branche la vie</b>
+              <p>Plaque, lave-linge, PAC, borne de voiture… Chaque gros appareil ouvre son propre circuit au tableau.</p>
+            </article>
+            <article class="note">
+              <b>3. Le compteur se calcule</b>
+              <p>Pas une addition naïve. Un foisonnement (on n’allume pas tout à fond) donne un abonnement 6, 9, 12 kVA…</p>
+            </article>
+          </div>
+          <p class="disclaimer">
+            Outil d’apprentissage. Il ne remplace pas un bureau d’études, un électricien ni l’attestation Consuel.
+            La version Android réutilisera exactement ces pages.
+          </p>
+        </div>
+      </section>
+
+      <section class="view" data-view="guide">
+        <div class="guide">
+          <aside class="guide-nav">
+            <h2>Sommaire</h2>
+            <div id="guide-nav-list"></div>
+          </aside>
+          <div class="guide-body" id="guide-body"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="atelier">
+        <div class="atelier">
+          <div class="steps">
+            <button class="step-tab" type="button" data-step="profil"><span class="n">1</span>Profil</button>
+            <button class="step-tab" type="button" data-step="pieces"><span class="n">2</span>Pièces</button>
+            <button class="step-tab" type="button" data-step="equip"><span class="n">3</span>Équipements</button>
+            <button class="step-tab" type="button" data-step="bilan"><span class="n">4</span>Compteur & tableau</button>
+          </div>
+          <div class="atelier-grid" id="atelier-grid">
+            <div class="panel" id="atelier-form"></div>
+            <div class="preview" id="atelier-preview"></div>
+          </div>
+          <div class="bilan" id="bilan" style="display: none"></div>
+          <div class="footer-bar" id="atelier-footer">
+            <button class="btn btn-ghost" type="button" id="btn-reset">Recommencer</button>
+            <div class="cta-row">
+              <button class="btn btn-ghost" type="button" id="btn-print">Imprimer</button>
+              <button class="btn btn-copper" type="button" id="btn-share">Partager l'extrait</button>
+              <button class="btn btn-ghost" type="button" data-step="bilan">Voir le compteur</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+    <script src="js/engine.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

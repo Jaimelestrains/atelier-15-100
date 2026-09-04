@@ -459,6 +459,66 @@
     return circuit;
   }
 
+  function ddrSpec(circuit, project) {
+    const kind = circuit.kind;
+    const name = circuit.name || "";
+    let ddr = circuit.type || "AC";
+    let why = "Type AC : courants alternatifs classiques (éclairage, prises).";
+
+    if (kind === "ev") {
+      ddr = "A";
+      why =
+        "IRVE : un DDR 30 mA qui ne protège que cette borne. Type A minimum (mode 1/2). Mode 3 mono : A ou F. Mode 3 tri : type B, ou A/F + DD-CDC.";
+    } else if (kind === "out") {
+      ddr = "A";
+      why = "Extérieur (usages non fixés au bâtiment) : différentiel dédié, distinct des circuits intérieurs.";
+    } else if (kind === "pac") {
+      ddr = "F";
+      why = "Variateur monophasé (PAC, clim, pompe) : type F obligatoire. Il vaut un type A, en plus immunisé aux parasites.";
+    } else if (kind === "spe" && name.indexOf("Plaque") === 0) {
+      ddr = "A";
+      why = "Plaque / cuisinière : type A obligatoire (défauts « redressés » possibles).";
+    } else if (kind === "spe" && name.indexOf("Lave-linge") === 0) {
+      ddr = "A";
+      why = "Lave-linge : type A obligatoire.";
+    } else if (kind === "spe" && name.indexOf("Congélateur") === 0) {
+      ddr = "A";
+      why = "Congélateur : type A, de préférence haute immunité (A-SI ou F) pour ne pas perdre le froid sur un micro-défaut.";
+    } else if (kind === "dhw") {
+      ddr = "A";
+      why = "Chauffe-eau : sous type A. Son calibre compte à 100 % pour dimensionner le DDR (comme chauffage et IRVE).";
+    } else if (kind === "heat") {
+      ddr = "AC";
+      why = "Chauffage résistif : type AC suffit. Le calibre de ces départs compte à 100 % dans le calcul du DDR.";
+    } else if (kind === "light") {
+      ddr = "AC";
+      why = "Éclairage : type AC. À ne pas mettre sous le même DDR que les prises de la même pièce (continuité de service).";
+    } else if (kind === "sock") {
+      ddr = "AC";
+      why = "Prises classiques : type AC. Cuisine dédiée souvent sous le type A avec l'électro.";
+    } else if (kind === "other" && name.indexOf("VMC") === 0) {
+      ddr = "AC";
+      why = "VMC : type AC, sur un autre DDR que l'éclairage si possible, pour qu'elle continue si une pièce saute.";
+    } else if (kind === "spe") {
+      ddr = "A";
+      why = "Gros électroménager : type A par prudence (moteur + électronique).";
+    }
+
+    if (kind === "sock" && name.indexOf("cuisine") !== -1) {
+      ddr = "A";
+      why = "Prises cuisine : on les met sous le type A, avec la plaque et le lave-linge.";
+    }
+
+    circuit.type = ddr;
+    circuit.ddrWhy = why;
+    circuit.ddrLabel = "DDR " + ddr + " 30 mA";
+    return circuit;
+  }
+
+  function protectCircuit(circuit, project) {
+    return ddrSpec(breakerSpec(circuit, project), project);
+  }
+
   function specializedCircuits(project) {
     const list = [];
     const studio = principalCount(project.rooms) <= 1;
@@ -531,7 +591,7 @@
       }
     }
     return list.map(function (c) {
-      return breakerSpec(c, project);
+      return protectCircuit(c, project);
     });
   }
 
@@ -569,7 +629,7 @@
       });
     }
     return list.map(function (c) {
-      return breakerSpec(c, project);
+      return protectCircuit(c, project);
     });
   }
 
@@ -597,23 +657,64 @@
     }
 
     const ddrs = [];
-    buckets.ev.forEach((c) => ddrs.push({ type: "A", label: "DDR IRVE 30 mA", circuits: [c], dedicated: true }));
-    buckets.out.forEach((c) => ddrs.push({ type: "A", label: "DDR extérieur 30 mA", circuits: [c], dedicated: true }));
+    buckets.ev.forEach((c) =>
+      ddrs.push({
+        type: "A",
+        label: "DDR IRVE 30 mA type A",
+        circuits: [c],
+        dedicated: true,
+        why: "Un différentiel rien que pour la borne. Type A minimum ; type F si tu veux plus d'immunité.",
+      })
+    );
+    buckets.out.forEach((c) =>
+      ddrs.push({
+        type: "A",
+        label: "DDR extérieur 30 mA type A",
+        circuits: [c],
+        dedicated: true,
+        why: "Les circuits extérieurs ont leur propre 30 mA, séparé de l'intérieur (une fuite au jardin n'éteint pas la maison).",
+      })
+    );
     chunk(buckets.pac, 8).forEach((cs, i) =>
-      ddrs.push({ type: "F", label: "DDR type F 30 mA" + (i ? " " + (i + 1) : ""), circuits: cs })
+      ddrs.push({
+        type: "F",
+        label: "DDR type F 30 mA" + (i ? " " + (i + 1) : ""),
+        circuits: cs,
+        why: "Variateur de vitesse : type F obligatoire. Il remplace un type A et déclenche moins « pour rien ».",
+      })
     );
     chunk(buckets.a, 8).forEach((cs, i) =>
-      ddrs.push({ type: "A", label: "DDR type A 30 mA" + (i ? " " + (i + 1) : ""), circuits: cs })
+      ddrs.push({
+        type: "A",
+        label: "DDR type A 30 mA" + (i ? " " + (i + 1) : ""),
+        circuits: cs,
+        why: "Plaque, lave-linge, électro cuisine : type A obligatoire. Au moins un par logement.",
+      })
     );
     chunk(buckets.ac, 8).forEach((cs, i) =>
-      ddrs.push({ type: "AC", label: "DDR type AC 30 mA" + (i ? " " + (i + 1) : ""), circuits: cs })
+      ddrs.push({
+        type: "AC",
+        label: "DDR type AC 30 mA" + (i ? " " + (i + 1) : ""),
+        circuits: cs,
+        why: "Éclairage, prises, chauffage résistif : type AC. On le sépare du type A pour qu'une fuite cuisine n'éteigne pas toute la maison.",
+      })
     );
 
     if (ddrs.length < 2) {
-      ddrs.push({ type: "A", label: "DDR réserve 30 mA", circuits: [] });
+      ddrs.push({
+        type: "A",
+        label: "DDR réserve 30 mA type A",
+        circuits: [],
+        why: "Deuxième différentiel obligatoire : si l'un saute, l'autre garde une partie du logement.",
+      });
     }
     if (!ddrs.some((d) => d.type === "A" || d.type === "F")) {
-      ddrs.unshift({ type: "A", label: "DDR type A 30 mA", circuits: [] });
+      ddrs.unshift({
+        type: "A",
+        label: "DDR type A 30 mA",
+        circuits: [],
+        why: "Au moins un type A par logement (plaque, lave-linge, IRVE).",
+      });
     }
 
     const agcp = power.agcp;

@@ -138,14 +138,29 @@
     ddr: `
       <div class="kicker">Chapitre 5</div>
       <h2>Le différentiel, c'est la vie</h2>
-      <p>Le disjoncteur protège les fils. Le <b>DDR 30 mA</b> protège les personnes : il coupe si une fuite de courant part vers la terre — par exemple à travers vous.</p>
+      <p>Le disjoncteur protège les fils. Le <b>DDR 30 mA</b> protège les personnes : il coupe si une fuite part vers la terre — par exemple à travers vous. Tous les circuits du logement passent derrière un 30 mA. Le <b>type</b> dépend de ce qu'il y a derrière.</p>
       <div class="grid-2">
-        <div class="card"><h3>Type AC</h3><p>Usages généraux : éclairage, prises classiques.</p></div>
-        <div class="card"><h3>Type A</h3><p>Plaque, lave-linge, IRVE. Au moins un par logement. Détecte aussi les défauts « redressés ».</p></div>
-        <div class="card"><h3>Type F</h3><p>PAC, clim, pompe de piscine (variateur). Moins de déclenchements bêtes.</p></div>
-        <div class="card"><h3>Type B</h3><p>Surtout triphasé / certaines bornes mode 3. Plus rare en maison simple.</p></div>
+        <div class="card"><h3>Type AC</h3><p>Courants alternatifs classiques. <b>Éclairage, prises, convecteurs, VMC.</b> Le moins cher. Un variateur ou une plaque peut le tromper.</p></div>
+        <div class="card"><h3>Type A</h3><p>Voit aussi les défauts « redressés » (électronique). <b>Obligatoire</b> pour plaque / cuisinière, lave-linge, IRVE. Au moins un par logement.</p></div>
+        <div class="card"><h3>Type F</h3><p>Comme un A, plus immunisé. <b>Obligatoire</b> devant un variateur monophasé : PAC, clim, pompe de piscine. Moins de déclenchements bêtes.</p></div>
+        <div class="card"><h3>Type B</h3><p>Voit les courants continus lisses. <b>Borne mode 3 triphasée</b>, certaines PAC tri. En mono, un A ou un F suffit souvent (parfois + DD-CDC).</p></div>
       </div>
-      <div class="callout">Règles d'or : 2 DDR minimum, 8 disjoncteurs max derrière chacun, calibre du DDR ≥ disjoncteur de branchement (AGCP), et circuits d'une même pièce répartis pour qu'une fuite n'éteigne pas toute la pièce.</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Charge</th><th>DDR</th><th>Pourquoi</th></tr></thead>
+          <tbody>
+            <tr><td>Éclairage, prises, radiateurs</td><td>AC 30 mA</td><td>Défauts alternatifs simples</td></tr>
+            <tr><td>Plaque, lave-linge</td><td>A 30 mA</td><td>Électronique / composante continue</td></tr>
+            <tr><td>Four, LV, sèche-linge</td><td>A 30 mA</td><td>Même rangée cuisine, par prudence</td></tr>
+            <tr><td>Congélateur</td><td>A-SI ou F</td><td>Haute immunité : ne pas perdre le froid</td></tr>
+            <tr><td>PAC, clim, pompe piscine</td><td>F 30 mA</td><td>Variateur de vitesse</td></tr>
+            <tr><td>Borne VE (mono)</td><td>A ou F dédié</td><td>Un DDR pour ce seul point</td></tr>
+            <tr><td>Borne VE (tri mode 3)</td><td>B, ou A/F + DD-CDC</td><td>Courant continu de fuite</td></tr>
+            <tr><td>Extérieur (portail, prise jardin)</td><td>A dédié</td><td>Séparé des circuits intérieurs</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout">Règles d'or : 2 DDR minimum, 8 disjoncteurs max derrière chacun, calibre du DDR ≥ AGCP, et ≥ (1 × chauffage + IRVE + chauffe-eau) + (0,5 × le reste). Un type F remplace un type A. Répartir les pièces : éclairage d'un côté, prises de l'autre.</div>
     `,
     tableau: `
       <div class="kicker">Chapitre 6</div>
@@ -437,10 +452,10 @@
     const rows = panel.ddrs
       .map((d) => {
         const mods = [
-          `<div class="mod ${d.type === "F" ? "mod-f" : d.type === "A" ? "mod-a" : "mod-ddr"}">${d.type} ${d.in}A</div>`,
+          `<div class="mod ${d.type === "F" ? "mod-f" : d.type === "A" ? "mod-a" : "mod-ddr"}" title="${escapeHtml(d.why || "")}">${d.type} ${d.in}A<br>30mA</div>`,
           ...d.circuits.map((c) => `<div class="mod mod-br curve-${c.curve || "C"}">${c.breaker || c.calibre + "A"}<br>${escapeHtml(c.name)}</div>`),
         ].join("");
-        return `<div><div class="small muted" style="margin:0 0 4px">${d.label} · ${d.circuits.length} départ${d.circuits.length > 1 ? "s" : ""}</div><div class="board-row">${mods}</div></div>`;
+        return `<div><div class="small muted" style="margin:0 0 4px">${d.label} · ${d.circuits.length} départ${d.circuits.length > 1 ? "s" : ""} · ${d.in} A</div><p class="small muted" style="margin:0 0 6px">${escapeHtml(d.why || "")}</p><div class="board-row">${mods}</div></div>`;
       })
       .join("");
 
@@ -449,7 +464,7 @@
     const table = panel.circuits
       .map(
         (c) =>
-          `<tr><td>${escapeHtml(c.name)}</td><td><b>${c.breaker}</b> ${c.poles}</td><td>${c.section} mm²</td><td>DDR ${c.type}</td><td>${escapeHtml(c.breakerWhy || c.note || "—")}</td></tr>`
+          `<tr><td>${escapeHtml(c.name)}</td><td><b>${c.breaker}</b> ${c.poles}<div class="small muted">${escapeHtml(c.breakerWhy || "")}</div></td><td>${c.section} mm²</td><td><b>${c.ddrLabel}</b><div class="small muted">${escapeHtml(c.ddrWhy || "")}</div></td></tr>`
       )
       .join("");
 
@@ -479,15 +494,15 @@
       </div>
       <div class="panel">
         <h2>Tableau de répartition</h2>
-        <p class="help">Chaque disjoncteur s'écrit <b>courbe + calibre</b> : C16, B20, D20. B = résistif, C = général, D = compresseur. À gauche le DDR (cuivre = A, vert = A, bleu = F).</p>
+        <p class="help">Le disjoncteur (B / C / D) protège le câble. Le <b>DDR 30 mA</b> (AC / A / F) protège les personnes — le type dépend de la charge. 8 départs max par différentiel.</p>
         <div class="board">${rows}<div><div class="small muted" style="margin:0 0 4px">Réserve 20 %</div><div class="board-row">${empty}</div></div></div>
-        <p class="small muted" style="margin-top:10px">Légende modules : <span style="color:#7a9a6e">vert = courbe B</span> · <span style="color:#b8860b">or = courbe C</span> · <span style="color:#6b8cce">bleu = courbe D</span></p>
+        <p class="small muted" style="margin-top:10px">Disjoncteurs : <span style="color:#7a9a6e">vert = courbe B</span> · <span style="color:#b8860b">or = courbe C</span> · <span style="color:#6b8cce">bleu = courbe D</span>. DDR : <span style="color:#c45c26">cuivre = AC</span> · <span style="color:#3d6b54">vert = A</span> · <span style="color:#4a6fa5">bleu = F</span> · tous en 30 mA.</p>
       </div>
       <div class="panel">
         <h2>Nomenclature des circuits</h2>
         <div class="table-wrap">
           <table class="circuit-table">
-            <thead><tr><th>Circuit</th><th>Disjoncteur</th><th>Section</th><th>Différentiel</th><th>Pourquoi cette courbe</th></tr></thead>
+            <thead><tr><th>Circuit</th><th>Disjoncteur</th><th>Section</th><th>Différentiel</th></tr></thead>
             <tbody>${table}</tbody>
           </table>
         </div>
@@ -559,7 +574,7 @@
       })
       .join("\n");
     const circuits = panel.circuits
-      .map((c) => `· ${c.name} — ${c.breaker} ${c.poles} · ${c.section} mm² · DDR ${c.type} · ${c.breakerWhy}`)
+      .map((c) => `· ${c.name} — ${c.breaker} ${c.poles} · ${c.section} mm² · ${c.ddrLabel} — ${c.ddrWhy}`)
       .join("\n");
     const why = power.groups
       .filter((g) => g.emploi > 40)
@@ -616,13 +631,13 @@
     const circuits = panel.circuits
       .map(
         (c) =>
-          `<tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.breaker)} ${c.poles}</td><td>${c.section} mm²</td><td>DDR ${c.type}</td><td>${escapeHtml(c.breakerWhy || c.note || "—")}</td></tr>`
+          `<tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.breaker)} ${c.poles}</td><td>${c.section} mm²</td><td>${escapeHtml(c.ddrLabel)}</td><td>${escapeHtml(c.ddrWhy || "")}</td></tr>`
       )
       .join("");
     const ddrs = panel.ddrs
       .map(
         (d) =>
-          `<p><b>${escapeHtml(d.label)}</b> ${d.in} A — ${d.circuits.map((c) => escapeHtml(c.name)).join(", ") || "réserve"}</p>`
+          `<p><b>${escapeHtml(d.label)}</b> ${d.in} A<br><span>${escapeHtml(d.why || "")}</span><br>${d.circuits.map((c) => escapeHtml(c.name)).join(", ") || "réserve"}</p>`
       )
       .join("");
     const checks = comp
@@ -690,7 +705,7 @@
     <p class="muted">${panel.reserve} modules de réserve (20 %).</p>
     <h2>Nomenclature</h2>
     <table>
-      <thead><tr><th>Circuit</th><th>Disjoncteur</th><th>Section</th><th>Différentiel</th><th>Courbe</th></tr></thead>
+      <thead><tr><th>Circuit</th><th>Disjoncteur</th><th>Section</th><th>Différentiel</th><th>Pourquoi ce DDR</th></tr></thead>
       <tbody>${circuits}</tbody>
     </table>
     <h2>Contrôle NF C 15-100</h2>
